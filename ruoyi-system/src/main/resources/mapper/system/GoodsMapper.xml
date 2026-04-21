@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--//对应接口-->
+<mapper namespace="com.ruoyi.system.mapper.GoodsMapper">
+
+    <insert id="addGoods" parameterType="Goods" useGeneratedKeys="true" keyProperty="goodsId">
+        insert into my_goods(
+        <if test="goodsId != null and goodsId != 0">goods_id,</if>
+        <if test="goodsName != null and goodsName != ''">goods_name,</if>
+        <if test="price != null and price != 0.0">price,</if>
+        )values(
+        <if test="goodsId != null and goodsId != ''">#{goods_id},</if>
+        <if test="goodsName != null and goodsName != ''">#{goods_name},</if>
+        <if test="price != null and price != 0.0">#{price}</if>
+        )
+    </insert>
+
+    <!--        id对应接口中方法名 parameterType对应形参类型 resulyType对应返回值类型
+    如果sql语句访问传递过来的变量
+    简单类型：名字随意 复杂类型：使用对象表示法·-->
+    <delete id="deleteById" parameterType="Integer">
+        delete from my_goods where goods_id=#{suiyiqiming}
+    </delete>
+
+
+</mapper>

@@ -12,6 +12,7 @@ import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 @SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
 public class RuoYiApplication
 {
+
     public static void main(String[] args)
     {
         // System.setProperty("spring.devtools.restart.enabled", "false");
@@ -26,5 +27,6 @@ public class RuoYiApplication
                 " |  | \\ `'   /|   `-'  /           \n" +
                 " |  |  \\    /  \\      /           \n" +
                 " ''-'   `'-'    `-..-'              ");
-    }
+        System.out.println("////////////////");
+   }
 }

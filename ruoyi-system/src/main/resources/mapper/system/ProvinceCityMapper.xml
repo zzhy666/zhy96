@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.ProvinceCityMapper">
+    
+    <resultMap type="ProvinceCity" id="ProvinceCityResult">
+        <result property="id"    column="id"    />
+        <result property="parentId"    column="parent_id"    />
+        <result property="name"    column="name"    />
+        <result property="level"    column="level"    />
+    </resultMap>
+
+    <sql id="selectProvinceCityVo">
+        select id, parent_id, name, level from province_city
+    </sql>
+
+    <select id="selectProvinceCityList" parameterType="ProvinceCity" resultMap="ProvinceCityResult">
+        <include refid="selectProvinceCityVo"/>
+        <where>  
+            <if test="parentId != null "> and parent_id = #{parentId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="level != null "> and level = #{level}</if>
+        </where>
+    </select>
+    
+    <select id="selectProvinceCityById" parameterType="Long" resultMap="ProvinceCityResult">
+        <include refid="selectProvinceCityVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertProvinceCity" parameterType="ProvinceCity" useGeneratedKeys="true" keyProperty="id">
+        insert into province_city
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="parentId != null">parent_id,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="level != null">level,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="parentId != null">#{parentId},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="level != null">#{level},</if>
+         </trim>
+    </insert>
+
+    <update id="updateProvinceCity" parameterType="ProvinceCity">
+        update province_city
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="level != null">level = #{level},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteProvinceCityById" parameterType="Long">
+        delete from province_city where id = #{id}
+    </delete>
+
+    <delete id="deleteProvinceCityByIds" parameterType="String">
+        delete from province_city where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -90,11 +90,40 @@ export const constantRoutes = [
         path: 'profile',
         component: () => import('@/views/system/user/profile/index'),
         name: 'Profile',
-        meta: { title: '个人中心', icon: 'user' }
+        meta: {title: '个人中心', icon: 'user'}
       }
     ]
+  },
+  {
+    path: '/worker',
+    component: Layout,
+    name: 'Worker',
+    meta: {title: '网格员端', icon: 'user'},
+    children: [
+      {
+        path: 'task',
+        name: 'WorkerTask',
+        component: () => import('@/views/system/worker/task'),
+        meta: {title: '我的任务'}
+      },
+      {
+        path: 'detect',
+        name: 'WorkerDetect',
+        component: () => import('@/views/system/worker/detect'), // 确保路径正确
+        meta: {title: 'AQI检测'}
+      }
+    ]
+  },
+
+
+  // 404 page must be placed at the end !!!
+  {
+    path: '*',
+    redirect: '/404',
+    hidden: true
   }
 ]
+
 
 // 动态路由，基于用户权限动态去加载
 export const dynamicRoutes = [
@@ -167,7 +196,8 @@ export const dynamicRoutes = [
         meta: { title: '修改生成配置', activeMenu: '/tool/gen' }
       }
     ]
-  }
+  },
+
 ]
 
 // 防止连续点击多次路由报错
@@ -183,7 +213,7 @@ Router.prototype.replace = function push(location) {
 }
 
 export default new Router({
-  mode: 'history', // 去掉url中的#
+  mode: 'hash', // 去掉url中的#
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRoutes
 })

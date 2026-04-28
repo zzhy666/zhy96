@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.WgTableMapper">
+    
+    <resultMap type="WgTable" id="WgTableResult">
+        <result property="wgId"    column="wg_id"    />
+        <result property="wgName"    column="wg_name"    />
+    </resultMap>
+
+    <sql id="selectWgTableVo">
+        select wg_id, wg_name from wg_table
+    </sql>
+
+    <select id="selectWgTableList" parameterType="WgTable" resultMap="WgTableResult">
+        <include refid="selectWgTableVo"/>
+        <where>  
+            <if test="wgName != null  and wgName != ''"> and wg_name like concat('%', #{wgName}, '%')</if>
+        </where>
+    </select>
+    
+    <select id="selectWgTableByWgId" parameterType="Long" resultMap="WgTableResult">
+        <include refid="selectWgTableVo"/>
+        where wg_id = #{wgId}
+    </select>
+
+    <insert id="insertWgTable" parameterType="WgTable" useGeneratedKeys="true" keyProperty="wgId">
+        insert into wg_table
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="wgName != null and wgName != ''">wg_name,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="wgName != null and wgName != ''">#{wgName},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWgTable" parameterType="WgTable">
+        update wg_table
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="wgName != null and wgName != ''">wg_name = #{wgName},</if>
+        </trim>
+        where wg_id = #{wgId}
+    </update>
+
+    <delete id="deleteWgTableByWgId" parameterType="Long">
+        delete from wg_table where wg_id = #{wgId}
+    </delete>
+
+    <delete id="deleteWgTableByWgIds" parameterType="String">
+        delete from wg_table where wg_id in 
+        <foreach item="wgId" collection="array" open="(" separator="," close=")">
+            #{wgId}
+        </foreach>
+    </delete>
+</mapper>

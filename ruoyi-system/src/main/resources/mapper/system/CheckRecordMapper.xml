@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CheckRecordMapper">
+
+    <!-- 1. 原有的CheckRecord实体结果映射 -->
+    <resultMap type="CheckRecord" id="CheckRecordResult">
+        <result property="recordId"    column="record_id"    />
+        <result property="inspectorId"    column="inspector_id"    />
+        <result property="feedbackId" column="feedback_id"/>
+        <result property="aqiLevelId"    column="aqi_level_id"    />
+        <result property="checkDate"    column="check_date"    />
+        <result property="checkTime"    column="check_time"    />
+        <result property="location"    column="location"    />
+        <result property="additionalData"    column="additional_data"    />
+        <result property="submitTime"    column="submit_time"    />
+        <result property="feedbackId" column="feedback_id"/>
+    </resultMap>
+
+    <!-- 2. 新增CheckRecordVO的结果映射（用于关联查询） -->
+    <resultMap type="com.ruoyi.system.domain.vo.CheckRecordVO" id="CheckRecordVOResult">
+        <!-- CheckRecord基础字段 -->
+        <id property="recordId" column="record_id"/>
+        <result property="inspectorId" column="inspector_id"/>
+        <result property="aqiLevelId" column="aqi_level_id"/>
+        <result property="checkDate" column="check_date"/>
+        <result property="checkTime" column="check_time"/>
+        <result property="location" column="location"/>
+        <result property="additionalData" column="additional_data"/>
+        <result property="submitTime" column="submit_time"/>
+
+        <!-- 关联检测员信息 -->
+        <association property="inspector" javaType="com.ruoyi.system.domain.Inspector">
+            <id property="id" column="inspector_id"/>
+            <result property="name" column="inspector_name"/>
+            <!-- 如果有其他字段，可以继续添加 -->
+            <!-- <result property="phone" column="inspector_phone"/> -->
+            <!-- <result property="email" column="inspector_email"/> -->
+        </association>
+
+        <!-- 关联AQI标准信息 -->
+        <association property="aqiBz" javaType="com.ruoyi.system.domain.AqiBz">
+            <id property="levelId" column="level_id"/>
+            <result property="aqiLevel" column="aqi_level"/>
+            <result property="description" column="aqi_description"/>
+            <!-- 如果有其他字段，可以继续添加 -->
+            <!-- <result property="minValue" column="min_value"/> -->
+            <!-- <result property="maxValue" column="max_value"/> -->
+        </association>
+        <association property="aqiFeedback" javaType="com.ruoyi.system.domain.AqiFeedback">
+            <id property="feedbackId" column="feedback_id"/>
+            <result property="provinceName" column="province_name"/>
+            <result property="cityName" column="city_name"/>
+            <result property="detailAddress" column="detail_address"/>
+            <result property="aqiLevelName" column="aqi_level_name"/>
+            <result property="airDescription" column="air_description"/>
+            <result property="feedbackTime" column="feedback_time"/>
+        </association>
+    </resultMap>
+
+    <!-- 3. 原有的单表查询SQL -->
+    <sql id="selectCheckRecordVo">
+        select record_id, inspector_id, aqi_level_id, check_date, check_time, location, additional_data, submit_time from check_record
+    </sql>
+
+    <!-- 4. 新增VO查询的SQL片段（三表关联） -->
+    <sql id="selectCheckRecordVOSql">
+        SELECT
+            cr.record_id,
+            cr.inspector_id,
+            cr.aqi_level_id,
+            cr.check_date,
+            cr.check_time,
+            cr.location,
+            cr.additional_data,
+            cr.submit_time,
+            cr.feedback_id,
+            -- 检测员表字段
+            i.id as inspector_id,
+            i.name as inspector_name,
+            -- AQI标准表字段
+            ab.level_id,
+            ab.aqi_level,
+            ab.description as aqi_description,
+            -- AQI反馈表字段（新增）
+            af.feedback_id,
+            af.province_name,
+            af.city_name,
+            af.detail_address,
+            af.aqi_level_name,
+            af.air_description,
+            af.feedback_time
+        FROM check_record cr
+                 LEFT JOIN inspector i ON cr.inspector_id = i.id
+                 LEFT JOIN aqi_bz ab ON cr.aqi_level_id = ab.level_id
+                 LEFT JOIN aqi_feedback af ON cr.feedback_id = af.feedback_id
+    </sql>
+
+    <!-- 5. 原有的单表查询方法 -->
+    <select id="selectCheckRecordList" parameterType="CheckRecord" resultMap="CheckRecordResult">
+        <include refid="selectCheckRecordVo"/>
+        <where>
+            <if test="inspectorId != null "> and inspector_id = #{inspectorId}</if>
+            <if test="aqiLevelId != null "> and aqi_level_id = #{aqiLevelId}</if>
+            <if test="checkDate != null "> and check_date = #{checkDate}</if>
+            <if test="checkTime != null "> and check_time = #{checkTime}</if>
+            <if test="location != null  and location != ''"> and location = #{location}</if>
+            <if test="additionalData != null  and additionalData != ''"> and additional_data = #{additionalData}</if>
+            <if test="submitTime != null "> and submit_time = #{submitTime}</if>
+        </where>
+    </select>
+
+    <!-- 6. 新增VO查询方法（三表关联） -->
+    <select id="selectCheckRecordVOList" parameterType="com.ruoyi.system.domain.vo.CheckRecordVO" resultMap="CheckRecordVOResult">
+        <include refid="selectCheckRecordVOSql"/>
+        <where>
+            <!-- 基本条件（CheckRecord表） -->
+            <if test="location != null and location != ''">AND cr.location LIKE CONCAT('%', #{location}, '%')</if>
+            <if test="checkDate != null">AND cr.check_date = #{checkDate}</if>
+            <if test="inspectorId != null">AND cr.inspector_id = #{inspectorId}</if>
+            <if test="aqiLevelId != null">AND cr.aqi_level_id = #{aqiLevelId}</if>
+            <if test="feedbackId != null">AND cr.feedback_id = #{feedbackId}</if>
+
+            <!-- 关联表条件（通过对象属性） -->
+            <if test="inspector != null and inspector.name != null and inspector.name != ''">
+                AND i.name LIKE CONCAT('%', #{inspector.name}, '%')
+            </if>
+            <if test="aqiBz != null and aqiBz.aqiLevel != null and aqiBz.aqiLevel != ''">
+                AND ab.aqi_level = #{aqiBz.aqiLevel}
+            </if>
+            <if test="aqiFeedback != null and aqiFeedback.provinceName != null and aqiFeedback.provinceName != ''">
+                AND af.province_name LIKE CONCAT('%', #{aqiFeedback.provinceName}, '%')
+            </if>
+            <if test="aqiFeedback != null and aqiFeedback.cityName != null and aqiFeedback.cityName != ''">
+                AND af.city_name LIKE CONCAT('%', #{aqiFeedback.cityName}, '%')
+            </if>
+        </where>
+        ORDER BY cr.check_date DESC, cr.check_time DESC
+    </select>
+
+    <!-- 7. 根据ID查询VO（三表关联） -->
+    <select id="selectCheckRecordVOById" parameterType="Long" resultMap="CheckRecordVOResult">
+        <include refid="selectCheckRecordVOSql"/>
+        WHERE cr.record_id = #{recordId}
+    </select>
+    <select id="selectCheckRecordVOByRecordId" parameterType="Long" resultMap="CheckRecordVOResult">
+        <include refid="selectCheckRecordVOSql"/>
+        WHERE cr.record_id = #{recordId}
+    </select>
+    <!-- 8. 原有的单表ID查询 -->
+    <select id="selectCheckRecordByRecordId" parameterType="Long" resultMap="CheckRecordResult">
+        <include refid="selectCheckRecordVo"/>
+        where record_id = #{recordId}
+    </select>
+
+    <!-- 9. 统计查询：按检测员分组统计记录数 -->
+    <select id="countRecordsByInspector" resultType="java.util.Map">
+        SELECT
+            i.id as inspector_id,
+            i.name as inspector_name,
+            COUNT(cr.record_id) as record_count
+        FROM check_record cr
+                 LEFT JOIN inspector i ON cr.inspector_id = i.id
+        GROUP BY cr.inspector_id, i.name
+        ORDER BY record_count DESC
+    </select>
+
+    <!-- 10. 统计查询：按检测地点分组统计 -->
+    <select id="countRecordsByLocation" resultType="java.util.Map">
+        SELECT
+            location,
+            COUNT(*) as record_count
+        FROM check_record
+        GROUP BY location
+        ORDER BY record_count DESC
+    </select>
+
+    <!-- 11. 获取检测员下拉选项 -->
+    <select id="selectInspectorOptions" resultType="java.util.Map">
+        SELECT
+            id as value,
+            name as label
+        FROM inspector
+        ORDER BY id
+    </select>
+
+    <!-- 12. 获取AQI级别下拉选项 -->
+    <select id="selectAqiLevelOptions" resultType="java.util.Map">
+        SELECT
+            level_id as value,
+            aqi_level as label
+        FROM aqi_bz
+        ORDER BY level_id
+    </select>
+
+    <!-- 以下原有方法保持不变 -->
+    <insert id="insertCheckRecord" parameterType="CheckRecord" useGeneratedKeys="true" keyProperty="recordId">
+        insert into check_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="inspectorId != null">inspector_id,</if>
+            <if test="aqiLevelId != null">aqi_level_id,</if>
+            <if test="feedbackId != null">feedback_id,</if>
+            <if test="checkDate != null">check_date,</if>
+            <if test="checkTime != null">check_time,</if>
+            <if test="location != null">location,</if>
+            <if test="additionalData != null">additional_data,</if>
+            <if test="submitTime != null">submit_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="inspectorId != null">#{inspectorId},</if>
+            <if test="aqiLevelId != null">#{aqiLevelId},</if>
+            <if test="feedbackId != null">#{feedbackId},</if>
+            <if test="checkDate != null">#{checkDate},</if>
+            <if test="checkTime != null">#{checkTime},</if>
+            <if test="location != null">#{location},</if>
+            <if test="additionalData != null">#{additionalData},</if>
+            <if test="submitTime != null">#{submitTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateCheckRecord" parameterType="CheckRecord">
+        update check_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="inspectorId != null">inspector_id = #{inspectorId},</if>
+            <if test="aqiLevelId != null">aqi_level_id = #{aqiLevelId},</if>
+            <if test="feedbackId != null">feedback_id = #{feedbackId},</if>
+            <if test="checkDate != null">check_date = #{checkDate},</if>
+            <if test="checkTime != null">check_time = #{checkTime},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="additionalData != null">additional_data = #{additionalData},</if>
+            <if test="submitTime != null">submit_time = #{submitTime},</if>
+        </trim>
+        where record_id = #{recordId}
+    </update>
+
+    <delete id="deleteCheckRecordByRecordId" parameterType="Long">
+        delete from check_record where record_id = #{recordId}
+    </delete>
+
+    <delete id="deleteCheckRecordByRecordIds" parameterType="String">
+        delete from check_record where record_id in
+        <foreach item="recordId" collection="array" open="(" separator="," close=")">
+            #{recordId}
+        </foreach>
+    </delete>
+</mapper>
